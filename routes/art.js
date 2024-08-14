@@ -1,20 +1,6 @@
 const express = require('express');
 const Art = require('../models/Art');
 const router = express.Router();
-const multer = require('multer');
-const path = require('path');
-
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/');
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + path.extname(file.originalname));
-  }
-});
-
-const upload = multer({ storage: storage });
 
 // Get all arts
 router.get('/', async (req, res) => {
@@ -27,17 +13,22 @@ router.get('/', async (req, res) => {
 });
 
 // Add new art
-router.post('/', upload.fields([{ name: 'image', maxCount: 1 }, { name: 'creatorImage', maxCount: 1 }]), async (req, res) => {
-  const art = new Art({
-    image: req.files['image'][0].path,
-    title: req.body.title,
-    description: req.body.description,
-    price: req.body.price,
-    creatorName: req.body.creatorName,
-    creatorImage: req.files['creatorImage'][0].path
-  });
-
+router.post('/', async (req, res) => {
   try {
+    // Extract the image and creatorImage from the request body
+    const { image, creatorImage, title, description, price, creatorName } = req.body;
+
+    // Create new Art object with base64 encoded images
+    const art = new Art({
+      image: image, // Assuming image is sent as a base64 string
+      title: title,
+      description: description,
+      price: price,
+      creatorName: creatorName,
+      creatorImage: creatorImage // Assuming creatorImage is sent as a base64 string
+    });
+
+    // Save the art object to MongoDB
     const newArt = await art.save();
     res.status(201).json(newArt);
   } catch (err) {

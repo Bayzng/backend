@@ -3,8 +3,6 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const artRoutes = require('./routes/art');
-const path = require('path');
-const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -22,17 +20,9 @@ mongoose.connect(MONGO_URI, {
     console.error('Failed to connect to MongoDB', err);
   });
 
-// Create 'uploads' directory if it doesn't exist
-const uploadDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir);
-}
-
 app.use(cors());
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: '50mb' })); // Increased limit to handle large base64 images
 app.use(bodyParser.urlencoded({ extended: true }));
-
-app.use('/uploads', express.static(uploadDir));
 
 app.use('/api/arts', artRoutes);
 
